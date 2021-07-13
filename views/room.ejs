@@ -1,0 +1,31 @@
+<div class="row">
+  <div class="col">
+    <div id="sfuWrapper">
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col">
+    <div id="videoRoot"></div>
+  </div>
+  <div class="col">
+    <button type="button" id="startSharing" onclick="startSharing()" class="btn btn-success">Screen Share</button>
+    <button type="button" id="stopSharing" onclick="stopSharing()" class="btn btn-danger" style="display: none;">Stop Sharing</button>
+
+    <h5>Participants</h5>
+    <ul class="list-group" id="participantList">
+    </ul>
+  </div>
+</div>
+
+<template id="participantTpl">
+  <li class="list-group-item"></li>
+</template>
+
+<script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="https://unpkg.com/@signalwire/js@beta"></script>
+<script>
+  var _swToken = "<%= token %>";
+  var _isModerator = "<%= moderator %>";
+</script>
+<script src="/room.js"></script>
