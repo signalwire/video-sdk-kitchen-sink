@@ -49,6 +49,10 @@ window.connect = () => {
     updateCanvas()
   }
 
+  const _createCanvasWrapper = function(canvas) {
+    sfuWrapper.appendChild(canvasEl);
+  }
+
   SignalWire.Video.createRoomObject({
     token: _swToken,
     rootElementId: 'videoRoot',
@@ -70,7 +74,11 @@ window.connect = () => {
         memberList.set(member.id, member);
       });
       renderMemberList();
-      _startDrawingCanvas()
+      _startDrawingCanvas();
+
+      // bind local video
+      const video = document.getElementById('localVideo')
+      video.srcObject = _currentRoom.localStream
     })
 
     _currentRoom.on('room.updated', (params) =>
@@ -114,7 +122,7 @@ window.connect = () => {
             // build canvas and context2d
             const canvasEl = document.createElement('canvas')
             canvasEl.id = 'canvas_' + member_id
-            sfuWrapper.appendChild(canvasEl)
+            _createCanvasWrapper(canvasEl);
             const canvasCtx = canvasEl.getContext('2d', { alpha: false })
             canvasMap.set(member_id, {
               member_id,
@@ -201,6 +209,28 @@ window.unmuteVideoSelf = () => {
   _currentRoom.videoUnmute(_currentRoom.member_id)
 }
 
+async function listDevices() {
+  var devices = await SignalWire.WebRTC.getDevicesWithPermissions();
+  devices.forEach((device) => {
+    var opt = document.createElement('option');
+    opt.value = device.deviceId;
+    opt.innerHTML = device.label;
+    document.getElementById(device.kind).appendChild(opt);
+  });
+}
+
+function setInput() {
+  var audioInput = document.getElementById('audioinput').value;
+  _currentRoom.updateMicrophone({ deviceId: audioInput });
+  var videoInput = document.getElementById('videoinput').value;
+  _currentRoom.updateCamera({ deviceId: videoInput });
+}
+
+function setOutput() {
+  var audioOutput = document.getElementById('audiooutput').value;
+  _currentRoom.updateSpeaker({ deviceId: audioOutput });
+}
+
 async function startSharing() {
   console.log('video', video);
   _currentShare = await _currentRoom.createScreenShareObject()
@@ -244,4 +274,5 @@ window.renderMember = (parent, template, member, extra_name = '') => {
 
 window.ready(function () {
   connect();
+  listDevices();
 })
