@@ -50,7 +50,7 @@ window.connect = () => {
   }
 
   const _createCanvasWrapper = function(canvas) {
-    sfuWrapper.appendChild(canvasEl);
+    sfuWrapper.appendChild(canvas);
   }
 
   SignalWire.Video.createRoomObject({
