@@ -1,0 +1,48 @@
+<div class="row">
+  <div class="col">
+    <div id="sfuWrapper">
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col">
+    <div id="videoRoot"></div>
+  </div>
+  <div class="col">
+    <button type="button" id="startSharing" onclick="startSharing()" class="btn btn-success">Screen Share</button>
+    <button type="button" id="stopSharing" onclick="stopSharing()" class="btn btn-danger" style="display: none;">Stop Sharing</button>
+
+    <div>
+      <label for="audioinput" class="form-label">Audio Input</label>
+      <select id="audioinput" class="form-control"></select>
+      <label for="videoinput" class="form-label">Video Input</label>
+      <select id="videoinput" class="form-control"></select>
+      <button type="button" id="setInput" onclick="setInput()" class="btn btn-success">Update input devices</button>
+    </div>
+    <div>
+      <label for="audioutput" class="form-label">Audio Output</label>
+      <select id="audiooutput" class="form-control"></select>
+      <button type="button" id="setOutput" onclick="setOutput()" class="btn btn-success">Update input devices</button>
+    </div>
+
+    <h5>Participants</h5>
+    <ul class="list-group" id="participantList">
+    </ul>
+  </div>
+</div>
+<div class="row">
+  <div class="col">
+    <video id="localVideo" width="100%" height="100%" muted  autoplay playsinline />
+  </div>
+</div>
+<template id="participantTpl">
+  <li class="list-group-item"></li>
+</template>
+
+<script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="https://unpkg.com/@signalwire/js@beta"></script>
+<script>
+  var _swToken = "<%= token %>";
+  var _isModerator = "<%= moderator %>";
+</script>
+<script src="/sfu.js"></script>

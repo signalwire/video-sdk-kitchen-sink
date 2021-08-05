@@ -50,17 +50,13 @@ async function getToken(room, user, mod) {
     'room.self.undeaf',
     'room.self.set_input_volume',
     'room.self.set_output_volume',
-    'room.self.set_input_sensitivity'
+    'room.self.set_input_sensitivity',
+    'room.list_available_layouts',
+    'room.set_layout',
+    'room.member.video_mute',
+    'room.member.audio_mute',
+    'room.member.remove'
   ]
-
-  if (mod) {
-    permissions.push(
-      'room.list_available_layouts',
-      'room.set_layout',
-      'room.member.video_mute',
-      'room.member.audio_mute'
-    )
-  }
 
   payload.permissions = permissions;
   var response = await apiRequest('/api/video/room_tokens', payload)
@@ -73,8 +69,12 @@ app.get('/', async (req, res) => {
 
 app.get('/room', async (req, res) => {
   var token = await getToken(req.query.room, req.query.user, req.query.mod);
-  var moderator = req.query.mod == '1';
-  res.render('room', { token, moderator });
+  res.render('room', { token });
+});
+
+app.get('/sfu', async (req, res) => {
+  var token = await getToken(req.query.room, req.query.user, req.query.mod);
+  res.render('sfu', { token });
 });
 
 http.listen(PORT, '0.0.0.0', () => {

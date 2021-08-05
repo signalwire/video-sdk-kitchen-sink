@@ -1,48 +1,72 @@
 <div class="row">
   <div class="col">
-    <div id="sfuWrapper">
-    </div>
-  </div>
-</div>
-<div class="row">
-  <div class="col">
     <div id="videoRoot"></div>
   </div>
+</div>
+
+<div class="row">
   <div class="col">
-    <button type="button" id="startSharing" onclick="startSharing()" class="btn btn-success">Screen Share</button>
-    <button type="button" id="stopSharing" onclick="stopSharing()" class="btn btn-danger" style="display: none;">Stop Sharing</button>
-
-    <div>
-      <label for="audioinput" class="form-label">Audio Input</label>
-      <select id="audioinput" class="form-control"></select>
-      <label for="videoinput" class="form-label">Video Input</label>
-      <select id="videoinput" class="form-control"></select>
-      <button type="button" id="setInput" onclick="setInput()" class="btn btn-success">Update input devices</button>
-    </div>
-    <div>
-      <label for="audioutput" class="form-label">Audio Output</label>
-      <select id="audiooutput" class="form-control"></select>
-      <button type="button" id="setOutput" onclick="setOutput()" class="btn btn-success">Update input devices</button>
-    </div>
-
     <h5>Participants</h5>
     <ul class="list-group" id="participantList">
     </ul>
   </div>
-</div>
-<div class="row">
+
   <div class="col">
-    <video id="localVideo" width="100%" height="100%" muted  autoplay playsinline />
+    <h5>Room Controls</h5>
+    <div>
+      <button type="button" id="hangupBtn" onclick="hangupCall()" class="btn btn-danger">Hangup</button>
+      <button type="button" id="startSharing" onclick="startSharing()" class="btn btn-success">Screen Share</button>
+      <button type="button" id="stopSharing" onclick="stopSharing()" class="btn btn-danger" style="display: none;">Stop Sharing</button>
+    </div>
+    <hr>
+    <div>
+      <label for="layoutPicker" class="form-label">Layout</label>
+      <select id="layoutPicker" class="form-select" onchange="setLayout()"></select>
+    </div>
+  </div>
+  <div class="col">
+    <h5>Devices and settings</h5>
+    <div>
+      <button type="button" id="toggleMute" onclick="toggleMute()" class="btn btn-primary">Mute</button>
+      <button type="button" id="toggleVideoMute" onclick="toggleVideoMute()" class="btn btn-primary">Stop Video</button>
+    </div>
+    <hr>
+    <div>
+      <label for="audioinput" class="form-label">Audio Input</label>
+      <select id="audioinput" class="form-select" onchange="setInput()"></select>
+      <label for="videoinput" class="form-label">Video Input</label>
+      <select id="videoinput" class="form-select" onchange="setInput()"></select>
+    </div>
+    <div>
+      <label for="audioutput" class="form-label">Audio Output</label>
+      <select id="audiooutput" class="form-select" onchange="setOutput()"></select>
+    </div>
+    <hr>
+    <div>
+      <label for="inputVolume" class="form-label">Audio Input Volume (<span id="inputVolumeDisplay">0</span>)</label>
+      <input type="range" class="form-range" id="inputVolume" min="-50" max="50" step="1" value="0" onchange="setMicrophoneVolume()">
+      <label for="outputVolume" class="form-label">Audio Output Volume (<span id="outputVolumeDisplay">0</span>)</label>
+      <input type="range" class="form-range" id="outputVolume" min="-50" max="50" step="1" value="0" onchange="setSpeakerVolume()">
+      <div class="form-text"></div>Volumes are expressed in dB, from -50 to 50, default 0</div>
+      <hr>
+      <label for="inputSensitivity" class="form-label">Input Sensitivity</label>
+      <input type="range" class="form-range" id="inputSensitivity" min="30" max="1430" step="200" value="30" onchange="setInputSensitivity()">
+    </div>
   </div>
 </div>
 <template id="participantTpl">
-  <li class="list-group-item"></li>
+  <li class="list-group-item d-flex">
+    <div class="participantName flex-grow-1"></div>
+    <div class="btn-group participantControls">
+      <button type="button" class="btn btn-sm btn-danger kickBtn" onclick="kickParticipant(this)">Kick</button>
+    </div>
+  </li>
 </template>
 
 <script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="https://unpkg.com/@signalwire/js@beta"></script>
+
 <script>
   var _swToken = "<%= token %>";
-  var _isModerator = "<%= moderator %>";
 </script>
 <script src="/room.js"></script>

@@ -3,13 +3,56 @@ let _currentShare = null
 const memberList = new Map()
 let myMemberId = null;
 
-let audioActive = true;
-let videoActive = true;
-
 /**
  * Connect with Relay creating a client and attaching all the event handler.
  */
 window.connect = () => {
+  const sfuWrapper = document.getElementById('sfuWrapper')
+  const canvasMap = new Map()
+  let _allowCanvasDraw = true
+
+  const _deleteCanvas = (member_id) => {
+    // destroy canvas and context2d
+    let { canvasEl, canvasCtx } = canvasMap.get(member_id)
+    canvasCtx = undefined
+    canvasEl.parentNode.removeChild(canvasEl)
+    canvasMap.delete(member_id)
+  }
+  const _stopDrawingCanvas = function () {
+    _allowCanvasDraw = false
+    for (const member_id of canvasMap.keys()) {
+      _deleteCanvas(member_id)
+    }
+  }
+  const _startDrawingCanvas = function () {
+    const _mcu = document.querySelector('#videoRoot video')
+    function updateCanvas() {
+      canvasMap.forEach((mapValue) => {
+        const { canvasEl, canvasCtx, x, y, width, height } = mapValue
+        // calculate size of slice
+        // _mcu.videoWidth _mcu.videoHeight
+        var computedWidth = _mcu.videoWidth * width / 100;
+        var computedHeight = _mcu.videoHeight * height / 100;
+        var computedX = _mcu.videoWidth * x / 100;
+        var computedY = _mcu.videoHeight * y / 100;
+        canvasEl.width = computedWidth
+        canvasEl.height = computedHeight
+        canvasCtx.drawImage(_mcu, computedX, computedY, computedWidth, computedHeight, 0, 0, computedWidth, computedHeight)
+        canvasCtx.restore()
+      })
+      if (_allowCanvasDraw) {
+        setTimeout(function () {
+          requestAnimationFrame(updateCanvas)
+        }, 1000 / 15)
+      }
+    }
+    updateCanvas()
+  }
+
+  const _createCanvasWrapper = function(canvas) {
+    sfuWrapper.appendChild(canvas);
+  }
+
   SignalWire.Video.createRoomObject({
     token: _swToken,
     rootElementId: 'videoRoot',
@@ -17,6 +60,8 @@ window.connect = () => {
     video: true,
   }).then((roomObject) => {
     _currentRoom = roomObject
+    
+    console.log('Video SDK _currentRoom', _currentRoom)
 
     _currentRoom.on('room.started', (params) =>
       console.log('>> DEMO room.started', params)
@@ -25,11 +70,15 @@ window.connect = () => {
     _currentRoom.on('room.joined', async (params) => {
       console.log('>> DEMO room.joined', params)
       myMemberId = params.member_id;
-      populateLayout();
       params.room.members.forEach((member) => {
         memberList.set(member.id, member);
       });
       renderMemberList();
+      _startDrawingCanvas();
+
+      // bind local video
+      const video = document.getElementById('localVideo')
+      video.srcObject = _currentRoom.localStream
     })
 
     _currentRoom.on('room.updated', (params) =>
@@ -48,9 +97,9 @@ window.connect = () => {
       console.log('>> DEMO global member.updated', params)
     )
 
-    _currentRoom.on('member.updated.audio_muted', (params) => {
-      console.log('>> DEMO member.updated.audio_muted', params);
-    })
+    _currentRoom.on('member.updated.audio_muted', (params) =>
+      console.log('>> DEMO member.updated.audio_muted', params)
+    )
     _currentRoom.on('member.updated.video_muted', (params) =>
       console.log('>> DEMO member.updated.video_muted', params)
     )
@@ -61,12 +110,51 @@ window.connect = () => {
       renderMemberList();
     })
     _currentRoom.on('layout.changed', (params) => {
-      console.log('>> DEMO layout.changed', params);
-      setSelected('layoutPicker', params.layout.name)
-    })
+      console.log('>> DEMO layout.changed', params)
 
+      const { layout } = params
+
+      const validmember_ids = []
+      layout.layers.forEach(({ member_id, x, y, width, height }) => {
+        if (member_id) {
+          validmember_ids.push(member_id)
+          if (!canvasMap.has(member_id)) {
+            // build canvas and context2d
+            const canvasEl = document.createElement('canvas')
+            canvasEl.id = 'canvas_' + member_id
+            _createCanvasWrapper(canvasEl);
+            const canvasCtx = canvasEl.getContext('2d', { alpha: false })
+            canvasMap.set(member_id, {
+              member_id,
+              canvasEl,
+              canvasCtx,
+              x,
+              y,
+              width,
+              height,
+            })
+          } else {
+            canvasMap.set(member_id, {
+              ...canvasMap.get(member_id),
+              x,
+              y,
+              width,
+              height,
+            })
+          }
+        }
+      })
+
+      Array.from(canvasMap.keys()).forEach((member_id) => {
+        if (!validmember_ids.includes(member_id)) {
+          _deleteCanvas(member_id)
+        }
+      })
+      
+    })
     _currentRoom.on('track', (event) => console.log('>> DEMO track', event))
     _currentRoom.on('destroy', () => {
+      _stopDrawingCanvas()
     })
 
     _currentRoom
@@ -151,74 +239,6 @@ async function startSharing() {
   document.getElementById('stopSharing').style.display = 'block';
 }
 
-async function hangupCall() {
-  await _currentRoom.leave();
-  window.location.href = "/";
-}
-
-async function populateLayout() {
-  const layoutList = await _currentRoom.getLayouts();
-
-  layoutList.layouts.forEach((layout) => {
-    var opt = document.createElement('option');
-    opt.value = layout;
-    opt.innerHTML = layout;
-    document.getElementById('layoutPicker').appendChild(opt);
-  });
-
-  setSelected('layoutPicker', "2x1")
-}
-
-function setSelected(select_id, value) {
-  document.querySelector('#' + select_id + ' [value="' + value + '"]').selected = true;
-}
-
-function toggleMute() {
-  if (audioActive) {
-    document.getElementById('toggleMute').innerText = 'Unmute';
-    muteSelf();
-    audioActive = false;
-  } else {
-    document.getElementById('toggleMute').innerText = 'Mute';
-    unmuteSelf();
-    audioActive = true;
-  }
-}
-
-function toggleVideoMute() {
-  if (videoActive) {
-    document.getElementById('toggleVideoMute').innerText = 'Start Video';
-    muteVideoSelf();
-    videoActive = false;
-  } else {
-    document.getElementById('toggleVideoMute').innerText = 'Stop Video';
-    unmuteVideoSelf();
-    videoActive = true;
-  }
-}
-
-async function setLayout() {
-  const name = document.getElementById('layoutPicker').value
-  await _currentRoom.setLayout({ name });
-}
-
-async function setMicrophoneVolume() {
-  var val = document.getElementById('inputVolume').value;
-  document.getElementById('inputVolumeDisplay').innerText = val;
-  await _currentRoom.setMicrophoneVolume({ volume: val });
-}
-
-async function setSpeakerVolume() {
-  var val = document.getElementById('outputVolume').value;
-  document.getElementById('outputVolumeDisplay').innerText = val;
-  await _currentRoom.setSpeakerVolume({ volume: val });
-}
-
-async function setInputSensitivity() {
-  var val = document.getElementById('inputSensitivity').value;
-  await _currentRoom.setInputSensitivity({ value: val });
-}
-
 window.stopSharing = () => {
   _currentShare.hangup();
   _currentShare = null;
@@ -237,7 +257,7 @@ window.renderMemberList = () => {
   }
 
   var template = document.querySelector('#participantTpl');
-  renderMember(parent, template, memberList.get(myMemberId), true);
+  renderMember(parent, template, memberList.get(myMemberId), ' (me)');
   memberList.forEach((member) => {
     if (member.id != myMemberId) {
       renderMember(parent, template, member)
@@ -245,25 +265,11 @@ window.renderMemberList = () => {
   }); 
 }
 
-window.renderMember = (parent, template, member, its_me) => {
-  if (member) {
-    var clone = template.content.cloneNode(true);
+window.renderMember = (parent, template, member, extra_name = '') => {
+  var clone = template.content.cloneNode(true);
     var item = clone.querySelector('li');
-    item.id = member.id
-    if (its_me) {
-      item.querySelector('.participantName').innerText = member.name + '(me)';
-      var elem = item.querySelector('.participantControls');
-      elem.parentNode.removeChild(elem);
-    } else {
-      item.querySelector('.participantName').innerText = member.name
-    }
+    item.innerText = member.name + extra_name;
     parent.appendChild(clone);
-  }
-}
-
-async function kickParticipant(e) {
-  var id = e.closest("li").id;
-  await _currentRoom.removeMember({ memberId: id });
 }
 
 window.ready(function () {
