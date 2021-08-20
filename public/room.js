@@ -62,7 +62,7 @@ window.connect = () => {
     })
     _currentRoom.on('layout.changed', (params) => {
       console.log('>> DEMO layout.changed', params);
-      setSelected('layoutPicker', params.layout.name)
+      setSelected('layoutPicker', params.layout.name);
     })
 
     _currentRoom.on('track', (event) => console.log('>> DEMO track', event))
@@ -170,7 +170,7 @@ async function populateLayout() {
 }
 
 function setSelected(select_id, value) {
-  document.querySelector('#' + select_id + ' [value="' + value + '"]').selected = true;
+  // document.querySelector('#' + select_id + ' [value="' + value + '"]').selected = true;
 }
 
 function toggleMute() {
