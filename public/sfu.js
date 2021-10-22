@@ -116,7 +116,7 @@ window.connect = () => {
 
       const validmember_ids = []
       layout.layers.forEach(({ member_id, x, y, width, height }) => {
-        if (member_id) {
+        if (member_id && member_id != myMemberId) {
           validmember_ids.push(member_id)
           if (!canvasMap.has(member_id)) {
             // build canvas and context2d
