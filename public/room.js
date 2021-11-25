@@ -146,8 +146,7 @@ function setOutput() {
 async function startSharing() {
   _currentShare = await _currentRoom.createScreenShareObject()
   document.getElementById('startSharing').style.display = 'none';
-  document.getElementById('startSharingAudio').style.display = 'none';
-  document.getElementById('stopSharing').style.display = 'block';
+  document.getElementById('stopSharing').style.display = 'inline-block';
 }
 
 async function hangupCall() {
@@ -221,8 +220,7 @@ async function setInputSensitivity() {
 window.stopSharing = () => {
   _currentShare.hangup();
   _currentShare = null;
-  document.getElementById('startSharing').style.display = 'block';
-  document.getElementById('startSharingAudio').style.display = 'block';
+  document.getElementById('startSharing').style.display = 'inline-block';
   document.getElementById('stopSharing').style.display = 'none';
 }
 
