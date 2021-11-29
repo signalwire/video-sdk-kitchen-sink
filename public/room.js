@@ -144,11 +144,9 @@ function setOutput() {
 }
 
 async function startSharing() {
-  console.log('video', video);
   _currentShare = await _currentRoom.createScreenShareObject()
   document.getElementById('startSharing').style.display = 'none';
-  document.getElementById('startSharingAudio').style.display = 'none';
-  document.getElementById('stopSharing').style.display = 'block';
+  document.getElementById('stopSharing').style.display = 'inline-block';
 }
 
 async function hangupCall() {
@@ -222,8 +220,7 @@ async function setInputSensitivity() {
 window.stopSharing = () => {
   _currentShare.hangup();
   _currentShare = null;
-  document.getElementById('startSharing').style.display = 'block';
-  document.getElementById('startSharingAudio').style.display = 'block';
+  document.getElementById('startSharing').style.display = 'inline-block';
   document.getElementById('stopSharing').style.display = 'none';
 }
 
@@ -249,7 +246,7 @@ window.renderMember = (parent, template, member, its_me) => {
   if (member) {
     var clone = template.content.cloneNode(true);
     var item = clone.querySelector('li');
-    item.id = member.id
+    item.dataset.id = member.id
     if (its_me) {
       item.querySelector('.participantName').innerText = member.name + '(me)';
       var elem = item.querySelector('.participantControls');
@@ -262,7 +259,7 @@ window.renderMember = (parent, template, member, its_me) => {
 }
 
 async function kickParticipant(e) {
-  var id = e.closest("li").id;
+  var id = e.closest("li").dataset.id;
   await _currentRoom.removeMember({ memberId: id });
 }
 
